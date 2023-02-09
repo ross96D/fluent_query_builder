@@ -251,8 +251,8 @@ class PostgreSqlExecutor extends QueryExecutor<PostgreSQLExecutionContext> {
         var tx =
             PostgreSqlExecutor(connectionInfo, logger: logger, connection: ctx);
         returnValue = await f(tx);
-      } catch (e) {
-        ctx.cancelTransaction(reason: e.toString());
+      } catch (e, st) {
+        ctx.cancelTransaction(reason: '${e.toString()}|-_-|$st');
         rethrow;
       } finally {
         logger?.fine('Exiting transaction');
@@ -263,8 +263,11 @@ class PostgreSqlExecutor extends QueryExecutor<PostgreSQLExecutionContext> {
       /*if (txResult.reason == null) {
         throw StateError('The transaction was cancelled.');
       } else {*/
-      throw StateError(
-          'The transaction was cancelled with reason "${txResult.reason}".');
+      var errorStacktrace = txResult.reason.split('|-_-|');
+      Error.throwWithStackTrace(
+        StateError('The transaction was cancelled with reason "${errorStacktrace[0]}".'),
+        StackTrace.fromString(errorStacktrace[1])
+      );
       //}
     } else {
       return returnValue;
@@ -303,9 +306,9 @@ class PostgreSqlExecutor extends QueryExecutor<PostgreSQLExecutionContext> {
             PostgreSqlExecutor(connectionInfo, logger: logger, connection: ctx);
         returnValue = await f(tx);
         //  print('PostgreSqlExecutor end transaction');
-      } catch (e) {
+      } catch (e, st) {
         // print('PostgreSqlExecutor catch transaction');
-        ctx.cancelTransaction(reason: e.toString());
+        ctx.cancelTransaction(reason: '${e.toString()}|-_-|$st');
         rethrow;
       } finally {
         logger?.fine('Exiting transaction');
@@ -317,8 +320,11 @@ class PostgreSqlExecutor extends QueryExecutor<PostgreSQLExecutionContext> {
       /*if (txResult.reason == null) {
         throw StateError('The transaction was cancelled.');
       } else {*/
-      throw StateError(
-          'The transaction was cancelled with reason "${txResult.reason}".');
+      var errorStacktrace = txResult.reason.split('|-_-|');
+      Error.throwWithStackTrace(
+        StateError('The transaction was cancelled with reason "${errorStacktrace[0]}".'),
+        StackTrace.fromString(errorStacktrace[1])
+      );
       //}
     } else {
       return returnValue;
