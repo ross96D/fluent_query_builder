@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fluent_query_builder/src/exceptions/validation_exception.dart';
 import 'package:postgres/postgres.dart';
 
 import '../../fluent_query_builder.dart';
@@ -264,10 +265,18 @@ class PostgreSqlExecutor extends QueryExecutor<PostgreSQLExecutionContext> {
         throw StateError('The transaction was cancelled.');
       } else {*/
       var errorStacktrace = txResult.reason.split('|-_-|');
-      Error.throwWithStackTrace(
-        StateError('The transaction was cancelled with reason "${errorStacktrace[0]}".'),
-        StackTrace.fromString(errorStacktrace[1])
-      );
+      if (txResult.reason.contains('ValidationException: ')) {
+        var errMsg = errorStacktrace[0].split('ValidationException: ')[1];
+        Error.throwWithStackTrace(
+          ValidationException(errMsg),
+          StackTrace.fromString(errorStacktrace[1])
+        );
+      } else {
+        Error.throwWithStackTrace(
+          StateError('The transaction was cancelled with reason "${errorStacktrace[0]}".'),
+          StackTrace.fromString(errorStacktrace[1])
+        );
+      }
       //}
     } else {
       return returnValue;
@@ -321,10 +330,18 @@ class PostgreSqlExecutor extends QueryExecutor<PostgreSQLExecutionContext> {
         throw StateError('The transaction was cancelled.');
       } else {*/
       var errorStacktrace = txResult.reason.split('|-_-|');
-      Error.throwWithStackTrace(
-        StateError('The transaction was cancelled with reason "${errorStacktrace[0]}".'),
-        StackTrace.fromString(errorStacktrace[1])
-      );
+      if (txResult.reason.contains('ValidationException: ')) {
+        var errMsg = errorStacktrace[0].split('ValidationException: ')[1];
+        Error.throwWithStackTrace(
+          ValidationException(errMsg),
+          StackTrace.fromString(errorStacktrace[1])
+        );
+      } else {
+        Error.throwWithStackTrace(
+          StateError('The transaction was cancelled with reason "${errorStacktrace[0]}".'),
+          StackTrace.fromString(errorStacktrace[1])
+        );
+      }
       //}
     } else {
       return returnValue;
