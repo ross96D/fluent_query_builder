@@ -246,41 +246,19 @@ class PostgreSqlExecutor extends QueryExecutor<PostgreSQLExecutionContext> {
     final conn = connection as PostgreSQLConnection;
     var returnValue;
 
-    var txResult = await conn.transaction((ctx) async {
+    await conn.transaction((ctx) async {
       try {
         logger?.fine('Entering transaction');
         var tx =
             PostgreSqlExecutor(connectionInfo, logger: logger, connection: ctx);
         returnValue = await f(tx);
-      } catch (e, st) {
-        ctx.cancelTransaction(reason: '${e.toString()}|-_-|$st');
+      } catch (e) {
         rethrow;
       } finally {
         logger?.fine('Exiting transaction');
       }
     });
-
-    if (txResult is PostgreSQLRollback) {
-      /*if (txResult.reason == null) {
-        throw StateError('The transaction was cancelled.');
-      } else {*/
-      var errorStacktrace = txResult.reason.split('|-_-|');
-      if (txResult.reason.contains('ValidationException: ')) {
-        var errMsg = errorStacktrace[0].split('ValidationException: ')[1];
-        Error.throwWithStackTrace(
-          ValidationException(errMsg),
-          StackTrace.fromString(errorStacktrace[1])
-        );
-      } else {
-        Error.throwWithStackTrace(
-          StateError('The transaction was cancelled with reason "${errorStacktrace[0]}".'),
-          StackTrace.fromString(errorStacktrace[1])
-        );
-      }
-      //}
-    } else {
-      return returnValue;
-    }
+    return returnValue;
   }
 
   @override
@@ -307,45 +285,20 @@ class PostgreSqlExecutor extends QueryExecutor<PostgreSQLExecutionContext> {
     var conn = connection as PostgreSQLConnection;
     T? returnValue;
 
-    var txResult = await conn.transaction((ctx) async {
+    await conn.transaction((ctx) async {
       //print('PostgreSqlExecutor entering transaction');
       try {
         logger?.fine('Entering transaction');
         var tx =
             PostgreSqlExecutor(connectionInfo, logger: logger, connection: ctx);
         returnValue = await f(tx);
-        //  print('PostgreSqlExecutor end transaction');
-      } catch (e, st) {
-        // print('PostgreSqlExecutor catch transaction');
-        ctx.cancelTransaction(reason: '${e.toString()}|-_-|$st');
+      } catch (e) {
         rethrow;
       } finally {
         logger?.fine('Exiting transaction');
-        // print('PostgreSqlExecutor Exiting transactionn');
       }
     });
-
-    if (txResult is PostgreSQLRollback) {
-      /*if (txResult.reason == null) {
-        throw StateError('The transaction was cancelled.');
-      } else {*/
-      var errorStacktrace = txResult.reason.split('|-_-|');
-      if (txResult.reason.contains('ValidationException: ')) {
-        var errMsg = errorStacktrace[0].split('ValidationException: ')[1];
-        Error.throwWithStackTrace(
-          ValidationException(errMsg),
-          StackTrace.fromString(errorStacktrace[1])
-        );
-      } else {
-        Error.throwWithStackTrace(
-          StateError('The transaction was cancelled with reason "${errorStacktrace[0]}".'),
-          StackTrace.fromString(errorStacktrace[1])
-        );
-      }
-      //}
-    } else {
-      return returnValue;
-    }
+    return returnValue;
   }
 
   @override
