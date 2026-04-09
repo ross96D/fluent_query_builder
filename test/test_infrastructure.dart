@@ -1,4 +1,5 @@
 import 'package:fluent_query_builder/fluent_query_builder.dart';
+import 'package:postgres/postgres.dart' as pg;
 import 'package:test/test.dart';
 
 import 'constants.dart';
@@ -11,28 +12,50 @@ var connectionInfo = DBConnectionInfo(
     database: 'banco_teste',
     driver: ConnectionDriver.pgsql,
     port: dbPort,
-    username: 'sisadmin',
-    password: 's1sadm1n',
+    username: 'postgres',
+    password: 'postgre',
     charset: 'utf8',
     schemes: ['public']);
 
+Future<void> _ensureDatabaseExists() async {
+  final adminConn = await pg.Connection.open(
+    pg.Endpoint(
+      host: connectionInfo.host,
+      port: connectionInfo.port,
+      database: 'postgres',
+      username: connectionInfo.username,
+      password: connectionInfo.password,
+    ),
+    settings: pg.ConnectionSettings(sslMode: pg.SslMode.disable),
+  );
+
+  try {
+    await adminConn
+        .execute(
+      "SELECT 1 FROM pg_database WHERE datname = '${connectionInfo.database}'",
+    )
+        .then((result) async {
+      if (result.isEmpty) {
+        await adminConn.execute(
+          'CREATE DATABASE ${connectionInfo.database} WITH OWNER "${connectionInfo.username}" TEMPLATE=template0 ENCODING \'UTF8\'',
+        );
+      }
+    });
+  } catch (e) {
+    print('CREATE DATABASE check/create: $e');
+  } finally {
+    await adminConn.close();
+  }
+}
+
 void initializeTest() {
   setUp(() async {
-    _db = DbLayer(connectionInfo);
+    await _ensureDatabaseExists();
 
+    _db = DbLayer(connectionInfo);
     await _db.connect();
-    //create DATABASE IF NOT EXISTS
-    try {
-      //CREATE DATABASE ${connectionInfo.database} WITH OWNER "${connectionInfo.username}" TEMPLATE=template0  ENCODING 'UTF8' LC_COLLATE = 'pt_BR.UTF-8' LC_CTYPE = 'pt_BR.UTF-8';
-      await _db
-          .raw(
-              'CREATE DATABASE ${connectionInfo.database} WITH OWNER "${connectionInfo.username}" TEMPLATE=template0  ENCODING \'UTF8\' LC_COLLATE = \'pt_BR.UTF-8\' LC_CTYPE = \'pt_BR.UTF-8\';')
-          .exec();
-    } catch (e) {
-      print('CREATE DATABASE $e');
-    }
+
     await _db.raw('DROP TABLE IF EXISTS pessoas').exec();
-    //CREATE TABLE IF NOT EXISTS
     await _db
         .raw(
             'CREATE TABLE pessoas (id serial, nome VARCHAR(200),telefone VARCHAR(200),cep VARCHAR(200));')

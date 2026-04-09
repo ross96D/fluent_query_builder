@@ -19,3 +19,6 @@ example4.dart
 example5.dart
 fluent_query_builder_test.dart.bk
 example/test.dart
+
+# FVM Version Cache
+.fvm/
