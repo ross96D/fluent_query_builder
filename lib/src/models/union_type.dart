@@ -10,7 +10,6 @@ String unionTypeToSql(UnionType type) {
       break;
 
     case UnionType.UNION:
-    default:
       result = 'UNION';
       break;
   }
