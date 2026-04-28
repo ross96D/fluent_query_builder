@@ -46,12 +46,8 @@ class DbLayer {
         : connectionInfo.numberOfProcessors;
 
     if (connectionInfo.driver == ConnectionDriver.pgsql) {
-      if (connectionInfo.numberOfProcessors > 1 && connectionInfo.usePool) {
-        executor = PostgreSqlExecutorPool(nOfProces, connectionInfo);
-      } else {
-        executor = PostgreSqlExecutor(connectionInfo);
-        await executor.open();
-      }
+      executor = PostgreSqlExecutor(connectionInfo);
+      await (executor as PostgreSqlExecutor).open(usePool: connectionInfo.usePool);
     } else {
       if (connectionInfo.numberOfProcessors > 1 && connectionInfo.usePool) {
         executor = MySqlExecutorPool(nOfProces, connectionInfo: connectionInfo);
@@ -163,8 +159,7 @@ class DbLayer {
   }
 
   ///function to execute query from raw SQL String
-  QueryBuilder raw(String rawQueryString,
-      {Map<String, dynamic>? substitutionValues}) {
+  QueryBuilder raw(String rawQueryString, {Map<String, dynamic>? substitutionValues}) {
     return currentQuery = Raw(
       rawQueryString,
       options,
@@ -327,8 +322,7 @@ class DbLayer {
   }
 
   /// execute command on database
-  Future<int> execute(String query,
-      {Map<String, dynamic>? substitutionValues}) async {
+  Future<int> execute(String query, {Map<String, dynamic>? substitutionValues}) async {
     return executor.execute(query, substitutionValues: substitutionValues);
   }
 
@@ -368,8 +362,7 @@ class DbLayer {
     return Validator.formatValue(value, options);
   }
 
-  Future<List<T>> _fetchAll<T>(
-      [T Function(Map<String, dynamic>)? factory]) async {
+  Future<List<T>> _fetchAll<T>([T Function(Map<String, dynamic>)? factory]) async {
     Function? fac;
     if (factories != null) {
       for (var item in factories!) {
@@ -416,8 +409,7 @@ class DbLayer {
     return list;
   }
 
-  Future<T?> _fetchSingle<T>(
-      [T Function(Map<String?, dynamic>)? factory]) async {
+  Future<T?> _fetchSingle<T>([T Function(Map<String?, dynamic>)? factory]) async {
     Function? fac;
     if (factories != null) {
       for (var item in factories!) {
@@ -493,8 +485,7 @@ class DbLayer {
 
   Future _updateSingle<T>(T entity, [QueryBuilder? queryBuilder]) async {
     if (queryBuilder == null) {
-      throw IllegalArgumentException(
-          'Dblayer@updateSingle queryBuilder not defined');
+      throw IllegalArgumentException('Dblayer@updateSingle queryBuilder not defined');
     }
 
     var ormDefinitions = _validateModel(entity);
@@ -507,14 +498,12 @@ class DbLayer {
 
   Future _deleteSingle<T>(T entity, [QueryBuilder? queryBuilder]) async {
     if (queryBuilder == null) {
-      throw IllegalArgumentException(
-          'Dblayer@_deleteSingle queryBuilder not defined');
+      throw IllegalArgumentException('Dblayer@_deleteSingle queryBuilder not defined');
     }
 
     var ormDefinitions = _validateModel(entity);
     queryBuilder.from(ormDefinitions.tableName);
-    queryBuilder.whereSafe(
-        '${ormDefinitions.primaryKey}', '=', ormDefinitions.primaryKeyVal);
+    queryBuilder.whereSafe('${ormDefinitions.primaryKey}', '=', ormDefinitions.primaryKeyVal);
     await exec();
   }
 
@@ -529,8 +518,7 @@ class DbLayer {
       throw NotImplementedException('entity has not implemented the FluentModelBase interface');
     }*/
     if (!(entity is FluentModelBase)) {
-      throw NotImplementedException(
-          'entity has not implemented the FluentModelBase interface');
+      throw NotImplementedException('entity has not implemented the FluentModelBase interface');
     }
 
     // ignore: unnecessary_cast
@@ -663,8 +651,7 @@ class DbLayer {
     //se ouver itens a serem pegos no banco
     if (itens_id.isNotEmpty) {
       //prepara a query where in e executa
-      query.whereRaw(
-          '"$tableName"."$localKey" in (${itens_id.map((e) => "'$e'").join(",")})');
+      query.whereRaw('"$tableName"."$localKey" in (${itens_id.map((e) => "'$e'").join(",")})');
       queryResult = await query.getAsMap();
     } else {
       queryResult = null;

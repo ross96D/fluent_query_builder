@@ -25,7 +25,7 @@ class DBConnectionInfo {
   List<String>? schemes = ['public'];
   int numberOfProcessors = 1;
   bool setNumberOfProcessorsFromPlatform = false;
-  bool usePool = false;
+  bool usePool;
   QueryBuilderOptions options = QbOptionBuilder.postgres().build();
   int timeoutInSeconds = 120;
 
@@ -34,6 +34,7 @@ class DBConnectionInfo {
     this.host = 'loalhost',
     this.port = 5432,
     this.database = 'postgres',
+    this.usePool = true,
     required this.username,
     required this.password,
     this.charset,

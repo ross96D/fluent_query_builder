@@ -35,6 +35,7 @@ void main() {
           username: 'postgres',
           password: 'postgre',
           charset: 'utf8',
+          usePool: true,
           schemes: ['public'],
         ),
       );
